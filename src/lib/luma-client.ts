@@ -24,6 +24,7 @@ export async function fetchAllEvents(): Promise<LumaEvent[]> {
   const allEvents: LumaEvent[] = [];
   let cursor: string | undefined;
   let hasMore = true;
+  const seenCursors = new Set<string>();
 
   while (hasMore) {
     const params = new URLSearchParams();
@@ -39,8 +40,17 @@ export async function fetchAllEvents(): Promise<LumaEvent[]> {
       allEvents.push(entry.event);
     }
 
-    hasMore = data.has_more;
+    if (!data.has_more || !data.next_cursor) {
+      break;
+    }
+
+    if (seenCursors.has(data.next_cursor) || data.next_cursor === cursor) {
+      break;
+    }
+
+    seenCursors.add(data.next_cursor);
     cursor = data.next_cursor;
+    hasMore = true;
   }
 
   return allEvents;
@@ -60,6 +70,7 @@ export async function fetchAllGuests(
   const allGuests: LumaGuest[] = [];
   let cursor: string | undefined;
   let hasMore = true;
+  const seenCursors = new Set<string>();
 
   while (hasMore) {
     const params = new URLSearchParams({ event_id: eventId });
@@ -83,8 +94,17 @@ export async function fetchAllGuests(
       allGuests.push(guest);
     }
 
-    hasMore = data.has_more;
+    if (!data.has_more || !data.next_cursor) {
+      break;
+    }
+
+    if (seenCursors.has(data.next_cursor) || data.next_cursor === cursor) {
+      break;
+    }
+
+    seenCursors.add(data.next_cursor);
     cursor = data.next_cursor;
+    hasMore = true;
   }
 
   return allGuests;
